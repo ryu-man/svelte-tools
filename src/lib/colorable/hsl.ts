@@ -115,7 +115,7 @@ type ColorableTweened = Options<number> & {
     engine: ((...args) => Tweened<number>)
 }
 
-export const colorable = (data?: {}, options: SpringOpts | ColorableTweened = {}) => {
+export function colorable(data?: {}, options: SpringOpts | ColorableTweened = {}) {
     const color = hsl(data ?? {});
 
     const { engine, ...opt } = { engine: spring, ...options } ?? {}
