@@ -1,10 +1,10 @@
-import { writable as svelteWritable, readable as svelteReadable, type Subscriber, type Unsubscriber, type Updater, type Readable, type Writable } from "svelte/store"
+import { writable as svelteWritable, readable as svelteReadable, derived as svelteDerived, type Subscriber, type Unsubscriber, type Updater, type Readable, type Writable } from "svelte/store"
 
 export type Invalidator<T> = (value?: T) => void;
 
 export type Accessible<T> = Writable<T> & { value: T }
 
-export const accessible = <T>(value: T): Accessible<T> => {
+export function accessible<T>(value: T): Accessible<T> {
     let _value = value
 
     const { set, update, subscribe } = svelteWritable<T>(_value)
@@ -29,7 +29,7 @@ export const accessible = <T>(value: T): Accessible<T> => {
     }
 }
 export declare type WritableAccess<T> = Writable<T> & { value: T }
-export const writable = <T>(value?: T): WritableAccess<T> => {
+export function writable<T>(value?: T): WritableAccess<T> {
     let _value = value
 
     const { set, update, subscribe } = svelteWritable<T>(_value)
@@ -54,7 +54,7 @@ export const writable = <T>(value?: T): WritableAccess<T> => {
 
 export declare type StartStopNotifier<T> = (set: Subscriber<T>) => Unsubscriber | void;
 export declare type ReadableAccess<T> = Readable<T> & { readonly value: T }
-export const readable = <T>(value?: T, start?: StartStopNotifier<T>): ReadableAccess<T> => {
+export function readable<T>(value?: T, start?: StartStopNotifier<T>): ReadableAccess<T> {
     let _value = value
 
     const { subscribe } = svelteReadable<T>(_value, (set) => {
@@ -66,5 +66,59 @@ export const readable = <T>(value?: T, start?: StartStopNotifier<T>): ReadableAc
         get value() {
             return _value
         },
+    }
+}
+
+
+
+declare type Stores = ReadableAccess<any> | [ReadableAccess<any>, ...Array<ReadableAccess<any>>] | Array<ReadableAccess<any>>;
+/** One or more values from `Readable` stores. */
+declare type StoresValues<T> = T extends ReadableAccess<infer U> ? U : {
+    [K in keyof T]: T[K] extends ReadableAccess<infer U> ? U : never;
+};
+/**
+ * Derived value store by synchronizing one or more readable stores and
+ * applying an aggregation function over its input values.
+ *
+ * @param stores - input stores
+ * @param fn - function callback that aggregates the values
+ * @param initial_value - when used asynchronously
+ */
+export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValues<S>, set: (value: T) => void) => Unsubscriber | void, initial_value?: T): ReadableAccess<T>;
+/**
+ * Derived value store by synchronizing one or more readable stores and
+ * applying an aggregation function over its input values.
+ *
+ * @param stores - input stores
+ * @param fn - function callback that aggregates the values
+ * @param initial_value - initial value
+ */
+export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValues<S>) => T, initial_value?: T): ReadableAccess<T>;
+/**
+ * Derived value store by synchronizing one or more readable stores and
+ * applying an aggregation function over its input values.
+ *
+ * @param stores - input stores
+ * @param fn - function callback that aggregates the values
+ */
+export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValues<S>) => T): ReadableAccess<T>;
+
+export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValues<S>, set?: (value: T) => void) => T, initial_value?: T): ReadableAccess<T> {
+    let _value
+    if (Array.isArray(stores)) {
+        //@ts-ignore
+        _value = fn(stores.map(store => store.value))
+    } else {
+        _value = fn(stores.value)
+    }
+
+    //@ts-ignore
+    const { subscribe } = svelteDerived(stores, (values, ...args) => (_value = fn(values, ...args)), ...[initial_value].filter(Boolean))
+
+    return {
+        subscribe,
+        get value() {
+            return _value
+        }
     }
 }
