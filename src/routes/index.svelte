@@ -2,17 +2,11 @@
 	import { readable, writable, derived } from '$lib';
 	import { colorable as RGBColorable } from '$lib/colorable/rgb';
 	import { colorable as HSLColorable } from '$lib/colorable/hsl';
+	import { memorable } from '$lib/memorable';
 
 	const { rgb$, red$, green$, blue$, alpha$: rgbAlpha$, data: rgb } = RGBColorable();
 
-	const {
-		hsl$,
-		hue$,
-		saturation$,
-		lightness$,
-		alpha$: hslAlpha$,
-		data: hsl
-	} = HSLColorable();
+	const { hsl$, hue$, saturation$, lightness$, alpha$: hslAlpha$, data: hsl } = HSLColorable();
 
 	const store = writable($rgb$);
 
@@ -27,12 +21,19 @@
 	$: store.value = $rgb$;
 
 	let color = store.value;
+
+	const [current, old, older, oldest] = memorable(time$.value, 3);
+	$: current.set($time$);
 </script>
 
 <h1>Welcome to SvelteKit</h1>
 <p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
-<div>{$time$.toISOString()}</div>
 <div>{$utc$}</div>
+<br>
+<div>{$current.toISOString()}</div>
+<div>{$old.toISOString()}</div>
+<div>{$older.toISOString()}</div>
+<div>{$oldest.toISOString()}</div>
 <button on:click={(e) => (e.currentTarget.textContent = utc$.value)}>click me</button>
 <h3>Accesible <span>{color}</span></h3>
 
