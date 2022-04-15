@@ -1,6 +1,10 @@
 {
   "name": "svelte-tools",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "module": "index.js",
+  "svelte": "index.js",
+  "sideEffects": false,
   "scripts": {
     "dev": "svelte-kit dev",
     "build": "svelte-kit build",
