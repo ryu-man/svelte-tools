@@ -1,6 +1,6 @@
-import { spring, type Tweened } from "svelte/motion";
-import { derived, type Readable, type Writable } from "svelte/store";
-import { toHex, type HSLData } from "./common";
+import { spring, tweened } from "svelte/motion";
+import { derived, type Readable } from "svelte/store";
+import { isItSpringOptions, toHex, type HSLData, type Options, type SpringOpts } from "./common";
 
 export declare type HSL = {
     hue(val: number): HSL
@@ -76,7 +76,7 @@ export function hsl({ hue = 0, saturation = 0, lightness = 0, alpha = 1 }: HSLDa
     };
 }
 
-export declare type HSLColorable = {
+export declare type HSL$ = {
     subscribe: Readable<string>['subscribe']
 
     hue(): number;
@@ -91,43 +91,34 @@ export declare type HSLColorable = {
     alpha(): number;
     alpha(val: number): HSLColorable;
 
-    hue$: Readable<number>
-    saturation$: Readable<number>
-    lightness$: Readable<number>
-    alpha$: Readable<number>
-
     readonly color: HSL;
+}
+
+export declare type HSLColorable = {
+    hsl$: HSL$,
+    hue$: Readable<number>,
+    saturation$: Readable<number>,
+    lightness$: Readable<number>,
+    alpha$: Readable<number>,
+    data: HSLData
 };
 
-type SpringOpts = {
-    stiffness?: number;
-    damping?: number;
-    precision?: number;
-}
-type Options<T> = {
-    delay?: number;
-    duration?: number | ((from: T, to: T) => number);
-    easing?: (t: number) => number;
-    interpolate?: (a: T, b: T) => (t: number) => T;
-}
+export function colorable(data?: {}, options?: SpringOpts): HSLColorable
+export function colorable(data?: {}, options?: Options<number>): HSLColorable
 
-type ColorableTweened = Options<number> & {
-    engine: ((...args) => Tweened<number>)
-}
-
-export function colorable(data?: {}, options: SpringOpts | ColorableTweened = {}) {
+export function colorable(data?: {}, options: SpringOpts | Options<number> = {}): HSLColorable {
     const color = hsl(data ?? {});
 
-    const { engine, ...opt } = { engine: spring, ...options } ?? {}
+    const engine = isItSpringOptions(options) ? spring : tweened
 
-    const hue$ = engine(color.hue(), opt);
-    const saturation$ = engine(color.saturation(), opt);
-    const lightness$ = engine(color.lightness(), opt);
-    const alpha$ = engine(color.alpha(), opt);
+    const hue$ = engine(color.hue(), options);
+    const saturation$ = engine(color.saturation(), options);
+    const lightness$ = engine(color.lightness(), options);
+    const alpha$ = engine(color.alpha(), options);
 
     const { subscribe } = derived([hue$, saturation$, lightness$, alpha$], ([hue, saturation, lightness, alpha]) => `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`);
 
-    return {
+    const hsl$ = {
         subscribe,
         hue(val?: number, ...args) {
             if (val) {
@@ -163,38 +154,43 @@ export function colorable(data?: {}, options: SpringOpts | ColorableTweened = {}
         },
         get color() {
             return color;
-        },
+        }
+    }
+
+    return {
+        hsl$,
         hue$: derived(hue$, d => d),
         saturation$: derived(saturation$, d => d),
         lightness$: derived(lightness$, d => d),
-        alpha$: derived(alpha$, d => d)
+        alpha$: derived(alpha$, d => d),
+        data: bridge(hsl$)
     };
 
 }
 
-export const binding = (colorable: HSLColorable) => ({
+export const bridge = (hsl$: HSL$) => ({
     get hue() {
-        return colorable.hue();
+        return hsl$.hue();
     },
     set hue(val) {
-        colorable.hue(val);
+        hsl$.hue(val);
     },
     get saturation() {
-        return colorable.saturation();
+        return hsl$.saturation();
     },
     set saturation(val) {
-        colorable.saturation(val);
+        hsl$.saturation(val);
     },
     get lightness() {
-        return colorable.lightness();
+        return hsl$.lightness();
     },
     set lightness(val) {
-        colorable.lightness(val);
+        hsl$.lightness(val);
     },
     get alpha() {
-        return colorable.alpha();
+        return hsl$.alpha();
     },
     set alpha(val) {
-        colorable.alpha(val);
+        hsl$.alpha(val);
     }
 })

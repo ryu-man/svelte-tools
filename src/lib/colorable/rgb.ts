@@ -1,6 +1,6 @@
-import { spring, type Spring, tweened, type Tweened } from 'svelte/motion';
-import { derived, type Readable, type Subscriber, type Unsubscriber, type Writable } from 'svelte/store';
-import { toHex, type Color, type Data } from './common';
+import { spring, tweened } from 'svelte/motion';
+import { derived, type Readable } from 'svelte/store';
+import { isItSpringOptions, toHex, type Color, type Data, type Options, type SpringOpts } from './common';
 
 export declare type RGBData = Data & {
     red?: number;
@@ -86,7 +86,7 @@ export function rgb({ red = 0, green = 0, blue = 0, alpha = 1 }: RGBData): RGB {
     };
 }
 
-export declare type RGBColorable = {
+export declare type RGB$ = {
     subscribe: Readable<string>['subscribe']
 
     red(): number;
@@ -101,49 +101,39 @@ export declare type RGBColorable = {
     alpha(): number;
     alpha(val: number): RGB;
 
+    readonly color: RGB;
+
+}
+
+export declare type RGBColorable = {
+    rgb$: RGB$
     red$: Readable<number>
     green$: Readable<number>
     blue$: Readable<number>
     alpha$: Readable<number>
-
-    readonly color: RGB;
+    data: RGBData
 };
 
-type SpringOpts = {
-    stiffness?: number;
-    damping?: number;
-    precision?: number;
-}
-type Options<T> = {
-    delay?: number;
-    duration?: number | ((from: T, to: T) => number);
-    easing?: (t: number) => number;
-    interpolate?: (a: T, b: T) => (t: number) => T;
-}
-
-type ColorableTweened = Options<number> & {
-    engine: ((...args) => Tweened<number>)
-}
 
 export function colorable(data?: RGBData | undefined, options?: SpringOpts): RGBColorable
-export function colorable(data?: RGBData | undefined, options?: ColorableTweened): RGBColorable
+export function colorable(data?: RGBData | undefined, options?: Options<number>): RGBColorable
 
 export function colorable(
     data: RGBData | undefined = {},
-    options: SpringOpts | ColorableTweened
+    options: SpringOpts | Options<number> = {}
 ): RGBColorable {
     const color = rgb(data ?? {});
 
-    const { engine, ...opt } = { engine: spring, ...options } ?? {}
+    const engine = isItSpringOptions(options) ? spring : tweened
 
-    const red$ = engine(color.red(), opt);
-    const green$ = engine(color.green(), opt);
-    const blue$ = engine(color.blue(), opt);
-    const alpha$ = engine(color.alpha(), opt);
+    const red$ = engine(color.red(), options);
+    const green$ = engine(color.green(), options);
+    const blue$ = engine(color.blue(), options);
+    const alpha$ = engine(color.alpha(), options);
 
     const { subscribe } = derived([red$, green$, blue$, alpha$], ([red, green, blue, alpha]) => `rgba(${red}, ${green}, ${blue}, ${alpha})`);
 
-    return {
+    const rgb$ = {
         subscribe,
         red(val?: number, ...args) {
             if (val) {
@@ -180,36 +170,41 @@ export function colorable(
         get color() {
             return color;
         },
+    }
+
+    return {
+        rgb$,
         red$: derived(red$, d => d),
         green$: derived(green$, d => d),
         blue$: derived(blue$, d => d),
-        alpha$: derived(alpha$, d => d)
+        alpha$: derived(alpha$, d => d),
+        data: bridge(rgb$)
     };
 }
 
-export const binding = (colorable: RGBColorable) => ({
+export const bridge = (rgb$: RGB$) => ({
     get red() {
-        return colorable.red();
+        return rgb$.red();
     },
     set red(val) {
-        colorable.red(val);
+        rgb$.red(val);
     },
     get green() {
-        return colorable.green();
+        return rgb$.green();
     },
     set green(val) {
-        colorable.green(val);
+        rgb$.green(val);
     },
     get blue() {
-        return colorable.blue();
+        return rgb$.blue();
     },
     set blue(val) {
-        colorable.blue(val);
+        rgb$.blue(val);
     },
     get alpha() {
-        return colorable.alpha();
+        return rgb$.alpha();
     },
     set alpha(val) {
-        colorable.alpha(val);
+        rgb$.alpha(val);
     }
 })

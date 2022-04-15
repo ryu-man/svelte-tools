@@ -22,6 +22,13 @@ export function hexToRGB(hex: string): RGBData {
     throw new Error('The hex color is not correct');
 }
 
+export const isItSpringOptions = (opt): opt is SpringOpts => {
+    if ('duration' in opt || 'delay' in opt || 'interpolate' in opt || 'easing' in opt) {
+        return false
+    }
+    return true
+}
+
 export declare type Data = {
     alpha?: number
 }
@@ -44,4 +51,16 @@ export declare type Color<T> = {
     clone(): Color<T>;
     update(data: T): Color<T>;
     data(): T
+}
+
+export declare type SpringOpts = {
+    stiffness?: number;
+    damping?: number;
+    precision?: number;
+}
+export declare type Options<T> = {
+    delay?: number;
+    duration?: number | ((from: T, to: T) => number);
+    easing?: (t: number) => number;
+    interpolate?: (a: T, b: T) => (t: number) => T;
 }
