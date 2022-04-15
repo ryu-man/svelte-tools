@@ -1,6 +1,7 @@
-import { derived, writable, type Readable, type Updater, type Writable } from "svelte/store"
+import type { Updater } from "svelte/store"
+import { writable, derived, type WritableAccess, type ReadableAccess } from '../accessible'
 
-export type Memorable<T> = [current: Writable<T>, ...memories: Readable<T>[]]
+export type Memorable<T> = [current: WritableAccess<T>, ...memories: ReadableAccess<T>[]]
 
 export function memorable<T>(value: T, capacity = 1): Memorable<T> {
 
