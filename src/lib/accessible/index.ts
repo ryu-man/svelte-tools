@@ -101,24 +101,26 @@ export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValue
  * @param stores - input stores
  * @param fn - function callback that aggregates the values
  */
+
 export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValues<S>) => T): ReadableAccess<T>;
 
 export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValues<S>, set?: (value: T) => void) => T, initial_value?: T): ReadableAccess<T> {
-    let _value
-    if (Array.isArray(stores)) {
-        //@ts-ignore
-        _value = fn(stores.map(store => store.value))
-    } else {
-        _value = fn(stores.value)
-    }
 
     //@ts-ignore
-    const { subscribe } = svelteDerived(stores, (values, ...args) => (_value = fn(values, ...args)), ...[initial_value].filter(Boolean))
+    const { subscribe } = svelteDerived(stores, fn, ...[initial_value].filter(Boolean))
+
+    let get
+    if (stores instanceof Array) {
+        // @ts-ignore
+        get = () => fn(stores.map(store => store.value))
+    } else {
+        get = () => fn(stores.value)
+    }
 
     return {
         subscribe,
         get value() {
-            return _value
+            return get()
         }
     }
 }

@@ -29,12 +29,12 @@
 <h1>Welcome to SvelteKit</h1>
 <p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
 <div>{$utc$}</div>
-<br>
+<br />
 <div>{$current.toISOString()}</div>
 <div>{$old.toISOString()}</div>
 <div>{$older.toISOString()}</div>
 <div>{$oldest.toISOString()}</div>
-<button on:click={(e) => (e.currentTarget.textContent = utc$.value)}>click me</button>
+<button on:click={(e) => (e.currentTarget.textContent = old.value.toISOString())}>click me</button>
 <h3>Accesible <span>{color}</span></h3>
 
 <div style="display:flex; justify-content: space-around;">
