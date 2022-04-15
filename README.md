@@ -1,10 +1,8 @@
-# create-svelte
+# svelte-tools
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This project contains some store that you may find usefull
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
+## Install
 
 ```bash
 # create a new project in the current directory
@@ -14,27 +12,64 @@ npm init svelte@next
 npm init svelte@next my-app
 ```
 
-> Note: the `@next` is temporary
+## Accessible stores (writable / readable / derived)
 
-## Developing
+an accessible writable / readable / derived is a svelte store designed to let the user access the data without subscribing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+```js
+import { writable, readable, derived } from 'svelte-tools'
 
-```bash
-npm run dev
+// create an accessible store
+const store$ = writable("Hello world!")
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+// can access the data on demamnde
+console.log(store$.value)
+
+// set the data will trigger the store to react
+store$.value = "JavaScript is the best"
 ```
 
-## Building
+## Colorable store
 
-To create a production version of your app:
+a colorable store generates colors as you provide values, there are two colorable store: `rgbColorable` & `hslColorable`
 
-```bash
-npm run build
+```js
+import {rgbColorable, hslColorable} from 'svelte-tools'
+
+// create an accessible store
+// can subscribe to individuel stores
+// rgb$ is the color store
+// red$, green$, blue$, alpha$ are stores of what color is made of
+const { rgb$, red$, green$, blue$, alpha$} = rgbColorable();
+
+const { hsl$, hue$, saturation$, lightness$, alpha$} = hslColorable();
+
+// Note: stores will have a trailing '$' ex: hsl$
 ```
 
-You can preview the production build with `npm run preview`.
+By default colorable stores will use `spring` to animate changes, but it can be configurable to use `tweened` store instead, for that you need to specify tweened options , see the example below
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+```js
+import { rgbColorable } from 'svelte-tools'
+
+# create colorable rgb store
+const { rgb$ } = rgbColorable({}, {duration:400});
+```
+
+you can use a simple object for data binding
+
+```js
+<script>
+    import { rgbColorable } from 'svelte-tools'
+
+    # create colorable rgb store
+    const { rgb$, data } = rgbColorable();
+
+    // data.red
+    // data.green
+    // data.blue
+    // data.alpha
+</script>
+
+<input type="number" bind:value={data.red} min="0" max="255">
+```
