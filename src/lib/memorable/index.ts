@@ -27,6 +27,6 @@ export function memorable<T>(value: T, capacity = 1): Memorable<T> {
 
     return [
         current,
-        ...Array.from(new Array(capacity)).map((_, i) => derived(store, values => values[i + 1]))
+        ...[...Array(capacity)].map((_, i) => derived(store, values => values[i + 1]))
     ]
 }
