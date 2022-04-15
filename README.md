@@ -1,15 +1,11 @@
 # svelte-tools
 
-This project contains some store that you may find usefull
+**svelte-tools** is a collection of utilities that helps developers writing better cleaner codes
 
 ## Install
 
 ```bash
-# create a new project in the current directory
-npm init svelte@next
-
-# create a new project in my-app
-npm init svelte@next my-app
+npm i svelte-tools
 ```
 
 ## Accessible stores (writable / readable / derived)
