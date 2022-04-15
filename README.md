@@ -25,6 +25,22 @@ console.log(store$.value)
 store$.value = "JavaScript is the best"
 ```
 
+## Memorable store
+
+memorable store lets you access old memories of the current value
+
+```js
+import { memorable } from 'svelte-tools'
+
+// create an accessible store
+const [current, old, older, oldest] = memorable(new Date().getSeconds(), 3)
+
+setInterval(()=> current.set(new Date().getSeconds()), 1000)
+
+// can access the data on demamnde
+$: console.log($current, $old, $older, $oldest)
+```
+
 ## Colorable store
 
 a colorable store generates colors as you provide values, there are two colorable store: `rgbColorable` & `hslColorable`
