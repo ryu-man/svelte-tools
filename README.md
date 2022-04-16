@@ -22,7 +22,7 @@ const store$ = writable("Hello world!")
 console.log(store$.value)
 
 // set the data will trigger the store to react
-store$.value = "JavaScript is the best"
+store.set("JavaScript is the best")
 ```
 
 ## Memorable store
@@ -46,7 +46,7 @@ $: console.log($current, $old, $older, $oldest)
 a colorable store generates colors as you provide values, there are two colorable store: `rgbColorable` & `hslColorable`
 
 ```js
-import {rgbColorable, hslColorable} from 'svelte-tools'
+import { rgbColorable, hslColorable } from 'svelte-tools'
 
 // create an accessible store
 // can subscribe to individuel stores
