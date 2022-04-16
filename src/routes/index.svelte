@@ -3,6 +3,7 @@
 	import { colorable as RGBColorable } from '$lib/colorable/rgb';
 	import { colorable as HSLColorable } from '$lib/colorable/hsl';
 	import { memorable } from '$lib/memorable';
+	import { onMount } from 'svelte';
 
 	const { rgb$, red$, green$, blue$, alpha$: rgbAlpha$, data: rgb } = RGBColorable();
 
@@ -18,12 +19,13 @@
 
 	const utc$ = derived(time$, (d) => d.toUTCString());
 
-	$: store.value = $rgb$;
+	$: store.set($rgb$);
 
 	let color = store.value;
 
 	const [current, old, older, oldest] = memorable(time$.value, 3);
 	$: current.set($time$);
+
 </script>
 
 <h1>Welcome to SvelteKit</h1>
@@ -34,7 +36,7 @@
 <div>{$old.toISOString()}</div>
 <div>{$older.toISOString()}</div>
 <div>{$oldest.toISOString()}</div>
-<button on:click={(e) => (e.currentTarget.textContent = old.value.toISOString())}>click me</button>
+<button on:click={(e) => (e.currentTarget.textContent = oldest.value.toISOString())}>click me</button>
 <h3>Accesible <span>{color}</span></h3>
 
 <div style="display:flex; justify-content: space-around;">

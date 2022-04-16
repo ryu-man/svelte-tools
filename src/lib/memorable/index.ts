@@ -9,21 +9,11 @@ export function memorable<T>(value: T, capacity = 1): Memorable<T> {
 
     const memorize = (oldMemories, newMemory, max = capacity) => [newMemory, ...oldMemories].slice(0, max + 1)
 
-    let _value = value
     const current = {
-        set(val: T) {
-            return store.update((values) => memorize(values, _value = val))
-        },
-        update(fn: Updater<T>) {
-            return store.update(values => memorize(values, _value = fn(values[0])))
-        },
+        set: (val: T) => store.update((values) => memorize(values, current.value = val)),
+        update: (fn: Updater<T>) => store.update(values => memorize(values, current.value = fn(values[0]))),
         subscribe: derived(store, values => values[0]).subscribe,
-        get value() {
-            return _value
-        },
-        set value(val) {
-            this.set(_value = val)
-        }
+        value
     }
 
     return [
