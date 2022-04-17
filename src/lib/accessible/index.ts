@@ -4,6 +4,10 @@ export type Invalidator<T> = (value?: T) => void;
 
 export type Accessible<T> = Writable<T> & { value: T }
 
+/**
+ * 
+ * @deprecated
+ */
 export function accessible<T>(value: T): Accessible<T> {
     let _value = value
 
@@ -30,31 +34,41 @@ export function accessible<T>(value: T): Accessible<T> {
 }
 export declare type WritableAccess<T> = Writable<T> & { readonly value: T }
 export function writable<T>(value?: T): WritableAccess<T> {
+    let _value = value
 
-    const { set, update, subscribe } = svelteWritable<T>(value)
+    const { set, update, subscribe } = svelteWritable<T>(_value)
 
     const store = {
         subscribe,
-        update: (updater: Updater<T>) => update(old => store.value = updater(old)),
-        set: (val: T) => set(store.value = val),
-        value
+        update: (updater: Updater<T>) => update(old => _value = updater(old)),
+        set: (val: T) => set(_value = val),
     }
+    Object.defineProperty(store, 'value', {
+        get: () => _value,
+    })
 
+    //@ts-ignore
     return store
 }
 
 export declare type StartStopNotifier<T> = (set: Subscriber<T>) => Unsubscriber | void;
 export declare type ReadableAccess<T> = Readable<T> & { readonly value: T }
 export function readable<T>(value?: T, start?: StartStopNotifier<T>): ReadableAccess<T> {
+    let _value = value
+
     const { subscribe } = svelteReadable<T>(value, (set) => {
-        return start((value: T) => set(store.value = value))
+        return start((value: T) => set(_value = value))
     })
 
     const store = {
         subscribe,
-        value
     }
 
+    Object.defineProperty(store, 'value', {
+        get: () => _value,
+    })
+
+    //@ts-ignore
     return store
 }
 
@@ -96,19 +110,25 @@ export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValue
 export function derived<S extends Stores, T>(stores: S, fn: (values: StoresValues<S>, set?: (value: T) => void) => T, initial_value?: T): ReadableAccess<T> {
 
     //@ts-ignore
-    const { subscribe } = svelteDerived(stores, (values, ...args) => (store.value = fn(values, ...args)), ...[initial_value].filter(Boolean))
+    const { subscribe } = svelteDerived(stores, fn, ...[initial_value].filter(Boolean))
 
-    let initialValue
-    if (stores instanceof Array) {
-        initialValue = fn(stores.map(store => store.value))
+    let get
+    //@ts-ignore
+    if ('value' in stores) {
+        //@ts-ignore
+        get = () => fn(stores.value)
     } else {
-        initialValue = fn(stores.value)
+        //@ts-ignore
+        get = () => fn(stores?.map?.(store => store.value))
     }
 
     const store = {
         subscribe,
-        value: initialValue
     }
+    Object.defineProperty(store, 'value', {
+        get,
+    })
 
+    //@ts-ignore
     return store
 }
