@@ -10,13 +10,17 @@ export function memorable<T>(value: T, capacity = 1): Memorable<T> {
     const memorize = (oldMemories, newMemory, max = capacity) => [newMemory, ...oldMemories].slice(0, max + 1)
 
     const current = {
-        set: (val: T) => store.update((values) => memorize(values, current.value = val)),
-        update: (fn: Updater<T>) => store.update(values => memorize(values, current.value = fn(values[0]))),
-        subscribe: derived(store, values => values[0]).subscribe,
-        value
+        set: (val: T) => store.update((values) => memorize(values, val)),
+        update: (fn: Updater<T>) => store.update(values => memorize(values, fn(values[0]))),
+        subscribe: derived(store, values => values[0]).subscribe
     }
 
+    Object.defineProperty(current, 'value', {
+        get: () => store.value[0]
+    })
+
     return [
+        //@ts-ignore
         current,
         ...[...Array(capacity)].map((_, i) => derived(store, values => values[i + 1]))
     ]
