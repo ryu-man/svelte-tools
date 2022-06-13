@@ -1,7 +1,7 @@
-import type { Updater } from "svelte/store"
+import type { Updater, Writable } from "svelte/store"
 import { writable, derived, type WritableAccess, type ReadableAccess } from '../accessible'
 
-export type Memorable<T> = [current: WritableAccess<T>, ...memories: ReadableAccess<T>[]]
+export type Memorable<T> = [current: WritableAccess<T>, ...memories: ReadableAccess<T>[]] & Writable<T>
 
 export function memorable<T>(value: T, capacity = 1): Memorable<T> {
 
@@ -19,9 +19,14 @@ export function memorable<T>(value: T, capacity = 1): Memorable<T> {
         get: () => store.value[0]
     })
 
-    return [
+    const values: Memorable<T> = [
         //@ts-ignore
         current,
         ...[...Array(capacity)].map((_, i) => derived(store, values => values[i + 1]))
     ]
+    values.set = current.set
+    values.subscribe = current.subscribe
+    values.update = current.update
+ 
+    return values
 }
