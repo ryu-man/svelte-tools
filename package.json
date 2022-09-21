@@ -1,6 +1,6 @@
 {
   "name": "svelte-tools",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "main": "index.js",
   "module": "index.js",
   "svelte": "index.js",
