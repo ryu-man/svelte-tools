@@ -7,8 +7,14 @@ export function memorable<T>(value: T, capacity = 1): Memorable<T> {
 
     const store = writable([value, ...Array(capacity).fill(value)])
 
-    const memorize = (oldMemories, newMemory, max = capacity) => Array.from(new Set([newMemory, ...oldMemories])).slice(0, max + 1)
-    
+    const memorize = (oldMemories, newMemory, max = capacity) => {
+        if(oldMemories[0] !== newMemory){
+            return [newMemory, ...oldMemories].slice(0, max + 1)
+        } 
+
+        return oldMemories
+    }
+
     const current = {
         set: (val: T) => store.update((values) => memorize(values, val)),
         update: (fn: Updater<T>) => store.update(values => memorize(values, fn(values[0]))),
